@@ -51,6 +51,16 @@ pid_t       children[0xff];             /* array of child process ids */
  * FUNCTIONS
  */
 
+/* Declare functions now so we can order logically */
+void    optparse(int argc, char *argv[]);
+int     daemonize();
+int     master();
+bool    child(int id);
+void    register_signals();
+int     trap_signals(bool on);
+void    restart_children();
+void    terminate_children();
+
 /* When passed true, traps signals and assigns handlers as defined in sigpairs[]
  * When passed false, resets all trapped signals back to their default behavior.
  */
@@ -354,7 +364,7 @@ int daemonize()
     /* Change working directory to root.
      *
      * Every process has a working directory. Life is better when your working
-     * directory is set to something that is liable to disappear.
+     * directory is set to something that is unlikely to disappear.
      */
     if (chdir("/") < 0) {
         perror("chdir()");
