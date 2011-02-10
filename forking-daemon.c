@@ -273,8 +273,7 @@ void optparse(int argc, char *argv[])
     options.daemonize = false;
     strcpy(options.logfile, "/dev/null\0");
 
-    /* bash users will notice that this is the inspiration for the
-     * `getopts' builtin */
+    /* Colons indicate flags that have required arguments */
     while ((opt = getopt(argc, argv, "hdf:j:")) != -1) {
         switch (opt) {
         case 'd':
@@ -292,7 +291,14 @@ void optparse(int argc, char *argv[])
             clean_exit = true;
             /* fall through */
         default:
-            printf("Usage: %s [-hd] [-f path] [-j jobs]\n", argv[0]);
+            printf("An example forking daemon utilizing SIGCHLD.\n\n");
+            printf("Usage: %s [options]\n\n", argv[0]);
+            printf("Options:\n");
+            printf("    -j JOBS     number of children to spawn\n");
+            printf("    -f FILE     log to file when daemonized\n");
+            printf("    -d          daemonize\n");
+            printf("    -h\n");
+
             exit(clean_exit ? 0 : 1);
         }
     }
