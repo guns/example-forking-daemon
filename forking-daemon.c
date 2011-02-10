@@ -41,6 +41,7 @@ typedef struct {
  * FILE VARIABLES (effectively global, since this is a one-file program)
  */
 
+char *      process_name;               /* Name of current process; argv[0] */
 options_t   options;                    /* global options */
 int         sigcount = 0;               /* total signals trapped */
 sigpair_t   sigpairs[0xff];             /* array of SIGNALS, with handlers */
@@ -83,6 +84,9 @@ int main(int argc, char *argv[])
 {
     pid_t   pid;
     int     status;
+
+    /* record process name so we can modify it later */
+    process_name = argv[0];
 
     optparse(argc, argv);
 
@@ -221,6 +225,9 @@ int master()
 {
     int i;
 
+    /* Give our master a name (strncpy to remove any trailing garbage) */
+    strncpy(process_name, "forking-daemon: master", 0xff);
+
     /* spawn some children */
     for (i = 0; i < options.jobs; ++i) {
         if (!child(i)) {
@@ -268,12 +275,15 @@ bool child(int id)
     if (pid < 0) {
         return false;
     } else if (pid > 0) {
-        printf("Spawning child %d (pid %d)\n", id, pid);
+        printf("Master: Spawning child(%d) [pid %d]\n", id, pid);
         children[id] = pid; /* record the child pid */
         return true;
     }
 
     /* Child process continues here */
+
+    /* Give our child a name */
+    snprintf(process_name, 0xff, "forking-daemon: child(%d)", id);
 
     /* Children processes are exact (almost) copies of the parent!
      * Including signal traps! Our parent has a SIGTERM handler, and this child
@@ -385,7 +395,7 @@ void restart_children()
             /* waitpid returns 0 when the process is alive and well */
             continue;
         } else {
-            printf("Master: reaped dead child %d (pid %d)\n", i, pid);
+            printf("Master: reaped dead child(%d) [pid %d]\n", i, pid);
             child(i); /* relaunch this particular child */
         }
     }
